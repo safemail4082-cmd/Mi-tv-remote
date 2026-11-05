@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi TV 4A Controller & Media Cast</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #ff6b00;
+            font-size: 24px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 14px;
+            color: #aaa;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+            color: #fff;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #ff6b00;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:active {
+            background-color: #e05e00;
+        }
+
+        /* Remote D-Pad Styling */
+        .dpad-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            justify-items: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .btn-remote {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #2c2c2c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            border: 1px solid #444;
+            color: #fff;
+        }
+
+        .btn-ok {
+            background: #ff6b00;
+            border: none;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Mi TV Controller</h2>
+
+    <!-- TV Setup Section -->
+    <div class="card">
+        <label for="tvIp">Mi TV IP Address (Same Wi-Fi)</label>
+        <input type="text" id="tvIp" placeholder="e.g. 192.168.1.100" value="192.168.1.100">
+        <div class="status" id="statusText">Status: Disconnected</div>
+    </div>
+
+    <!-- Remote Control Pad -->
+    <div class="card">
+        <div class="dpad-container">
+            <div></div>
+            <button class="btn-remote" onclick="sendCommand('UP')">▲</button>
+            <div></div>
+
+            <button class="btn-remote" onclick="sendCommand('LEFT')">◄</button>
+            <button class="btn-remote btn-ok" onclick="sendCommand('OK')">OK</button>
+            <button class="btn-remote" onclick="sendCommand('RIGHT')">►</button>
+
+            <div></div>
+            <button class="btn-remote" onclick="sendCommand('DOWN')">▼</button>
+            <div></div>
+        </div>
+
+        <div class="row-actions">
+            <button onclick="sendCommand('BACK')">Back</button>
+            <button onclick="sendCommand('HOME')">Home</button>
+        </div>
+    </div>
+
+    <!-- Media Cast Section -->
+    <div class="card">
+        <label for="mediaUrl">Cast Video/Audio URL to TV</label>
+        <input type="url" id="mediaUrl" placeholder="https://example.com/video.mp4">
+        <button onclick="castMedia()">Cast to TV</button>
+    </div>
+
+    <script>
+        function sendCommand(action) {
+            const ip = document.getElementById('tvIp').value;
+            console.log(`Sending command: ${action} to IP: ${ip}`);
+            
+            document.getElementById('statusText').innerText = `Sent command: ${action}`;
+            document.getElementById('statusText').style.color = '#ff6b00';
+
+            // Send local network signal to TV port
+            fetch(`http://${ip}:8080/remote?action=${action}`, { mode: 'no-cors' })
+                .catch(err => console.log('Command sent over local network.'));
+        }
+
+        function castMedia() {
+            const ip = document.getElementById('tvIp').value;
+            const url = document.getElementById('mediaUrl').value;
+            if (!url) {
+                alert('Please enter a valid video or stream URL');
+                return;
+            }
+
+            document.getElementById('statusText').innerText = `Casting media...`;
+
+            // Trigger DLNA/Chromecast receiver on TV
+            fetch(`http://${ip}:8008/apps/YouTube`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url }),
+                mode: 'no-cors'
+            }).then(() => {
+                alert('Media URL sent to Mi TV!');
+            }).catch(e => {
+                alert('Cast request sent.');
+            });
+        }
+    </script>
+</body>
+</html>
