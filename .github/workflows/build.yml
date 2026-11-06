@@ -43,10 +43,21 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Configure Java 21 for Android Build
+      - name: Configure Java 21 and Dependency Resolution
         run: |
           cd android
           echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
+          echo "android.bundle.enableUncompressedNativeLibs=false" >> gradle.properties
+          
+          # Add conflict resolution strategy to build.gradle
+          echo "" >> app/build.gradle
+          echo "configurations.all {" >> app/build.gradle
+          echo "    resolutionStrategy.eachDependency { details ->" >> app/build.gradle
+          echo "        if (details.requested.group == 'org.jetbrains.kotlin') {" >> app/build.gradle
+          echo "            details.useVersion '1.8.22'" >> app/build.gradle
+          echo "        }" >> app/build.gradle
+          echo "    }" >> app/build.gradle
+          echo "}" >> app/build.gradle
 
       - name: Make Gradle Executable
         run: |
@@ -56,7 +67,7 @@ jobs:
       - name: Build Debug APK with Gradle
         run: |
           cd android
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --refresh-dependencies
 
       - name: Upload APK as GitHub Artifact
         uses: actions/upload-artifact@v4
