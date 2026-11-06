@@ -47,7 +47,6 @@ jobs:
         run: |
           cd android
           echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
-          echo "android.bundle.enableUncompressedNativeLibs=false" >> gradle.properties
           
           # Add conflict resolution strategy to build.gradle
           echo "" >> app/build.gradle
