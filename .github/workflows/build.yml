@@ -43,6 +43,11 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Configure Java 17 for Android Build
+        run: |
+          cd android
+          echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
+
       - name: Make Gradle Executable
         run: |
           cd android
